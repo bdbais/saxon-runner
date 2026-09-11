@@ -1,0 +1,2 @@
+# Il programma usa solo la libreria standard: questo serve solo per compilare l'exe.
+pyinstaller==6.19.0
