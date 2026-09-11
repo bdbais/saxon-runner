@@ -1,0 +1,104 @@
+name: Build e release
+
+# Ogni push su main: test, eseguibile, installer, prova di installazione e
+# disinstallazione. Un tag "v3.1.0" in piu' pubblica la release su GitHub,
+# da cui l'app scarica gli aggiornamenti.
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Versione
+        run: |
+          $m = Select-String -Path saxon_runner.py -Pattern '^__version__ = "(.+)"'
+          $v = $m.Matches[0].Groups[1].Value
+          if (-not $v) { throw "__version__ non trovata in saxon_runner.py" }
+          "VERSION=$v" >> $env:GITHUB_ENV
+          if ($env:GITHUB_REF -like 'refs/tags/*' -and "v$v" -ne $env:GITHUB_REF_NAME) {
+            throw "Il tag $env:GITHUB_REF_NAME non corrisponde a __version__ = $v"
+          }
+          "versione $v"
+
+      - name: Test
+        run: python -m unittest discover -s tests -v
+
+      - name: Eseguibile (PyInstaller)
+        run: |
+          python -m pip install --disable-pip-version-check pyinstaller==6.19.0
+          python -m PyInstaller --noconfirm --clean SaxonRunner.spec
+
+      - name: Avvio di prova dell'eseguibile
+        run: |
+          $p = Start-Process dist\SaxonRunner.exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "self-test uscito con codice $($p.ExitCode)" }
+
+      - name: Installer (Inno Setup)
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          & $iscc /Q "/DAppVersion=$env:VERSION" installer\SaxonRunner.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC uscito con codice $LASTEXITCODE" }
+
+      - name: Prova di installazione e disinstallazione
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP 'sr-install'
+          $p = Start-Process installer\Output\SaxonRunner-Setup.exe -Wait -PassThru `
+                 -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CURRENTUSER', "/DIR=$dir"
+          if ($p.ExitCode -ne 0) { throw "setup uscito con codice $($p.ExitCode)" }
+          if (-not (Test-Path "$dir\SaxonRunner.exe")) { throw 'SaxonRunner.exe non installato' }
+          if (-not (Test-Path "$dir\unins000.exe")) { throw 'disinstallatore mancante' }
+          $u = Start-Process "$dir\unins000.exe" -Wait -PassThru `
+                 -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
+          # unins000 si copia in %TEMP% e rilancia da li': si aspetta il risultato.
+          for ($i = 0; $i -lt 60 -and (Test-Path "$dir\SaxonRunner.exe"); $i++) { Start-Sleep 1 }
+          if (Test-Path "$dir\SaxonRunner.exe") { throw 'la disinstallazione non ha rimosso i file' }
+          'installazione e disinstallazione OK'
+
+      - name: File della release e checksum
+        run: |
+          New-Item -ItemType Directory release | Out-Null
+          Copy-Item installer\Output\SaxonRunner-Setup.exe release\
+          Copy-Item dist\SaxonRunner.exe release\SaxonRunner-portable.exe
+          $righe = Get-ChildItem release -File | ForEach-Object {
+            '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          }
+          $righe | Set-Content release\SHA256SUMS.txt -Encoding ascii
+          Get-Content release\SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SaxonRunner-${{ env.VERSION }}
+          path: release/*
+
+      - name: Pubblica la release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Note di rilascio: la sezione di CHANGELOG.md di questa versione.
+          $log = Get-Content CHANGELOG.md -Raw -Encoding utf8
+          $re = '(?ms)^## ' + [regex]::Escape($env:VERSION) + '\b[^\n]*\n(.*?)(?=^## |\z)'
+          $m = [regex]::Match($log, $re)
+          $note = if ($m.Success) { $m.Groups[1].Value.Trim() } else { "Saxon Runner $env:VERSION" }
+          $note | Set-Content notes.md -Encoding utf8
+          gh release create $env:GITHUB_REF_NAME release\SaxonRunner-Setup.exe release\SaxonRunner-portable.exe release\SHA256SUMS.txt `
+            --title "Saxon Runner $env:VERSION" --notes-file notes.md
