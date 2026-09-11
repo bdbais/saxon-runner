@@ -1,0 +1,21 @@
+# Copia originale del progetto (contiene log con percorsi di lavoro): mai nel repo
+originale/
+
+# Output di PyInstaller e Inno Setup
+build/
+dist/
+installer/Output/
+*.spec.bak
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Log e file prodotti dalle esecuzioni
+*.log
