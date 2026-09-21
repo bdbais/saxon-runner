@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.1 — 2026-09-21
+
+- Nuova icona: parentesi angolari e play, nei colori dell'interfaccia. Dentro lo stesso file il disegno cambia con la dimensione: completo dai 48 px in su, più spesso a 32, solo il play a 16 e 24, dove le parentesi diventerebbero una macchia.
+
 ## 3.1.0 — 2026-09-11
 
 Prima versione pubblica.

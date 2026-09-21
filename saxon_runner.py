@@ -18,7 +18,7 @@ from datetime import datetime
 
 import updater
 
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 # ── Color palette ────────────────────────────────────────────────────────────
 C = dict(
