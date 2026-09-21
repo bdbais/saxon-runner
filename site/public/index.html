@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saxon Runner — XSLT e Saxon su Windows, senza riga di comando</title>
+<meta name="description" content="Interfaccia grafica gratuita per Saxon su Windows: esegui XSLT, un clic sull'errore porta alla riga giusta, rilancia da solo quando salvi. Assistente AI locale facoltativo.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="Saxon Runner">
+<meta property="og:description" content="XSLT e Saxon su Windows, senza riga di comando.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:image" content="https://saxonrunner.bais.info/img/console.png">
+<link rel="canonical" href="https://saxonrunner.bais.info/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a6ed1'/><text x='50' y='68' font-size='58' font-family='Helvetica,Arial' font-weight='bold' fill='white' text-anchor='middle'>B</text></svg>">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f5f7fa; --bg-card:#ffffff;
+  --fg:#12181f; --fg-muted:#5b6773; --border:#e2e8f0;
+  --brand:#0a6ed1; --brand-fg:#ffffff;
+  --good:#1b7f4b; --warn:#b26b00;
+  --code-bg:#1e1e2e; --code-fg:#cdd6f4;
+  --radius:14px; --maxw:1040px;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.05);
+  --shot-shadow:0 2px 6px rgba(16,24,40,.08), 0 24px 48px rgba(16,24,40,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1117; --bg-soft:#131a23; --bg-card:#161d27;
+    --fg:#e6edf3; --fg-muted:#9aa7b4; --border:#252e3a;
+    --brand:#4c9aff; --brand-fg:#06121f;
+    --good:#4ade80; --warn:#fbbf24;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    --shot-shadow:0 2px 6px rgba(0,0,0,.5), 0 24px 48px rgba(0,0,0,.45);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
+a{color:var(--brand)}
+code,kbd{font:14px/1.4 Consolas,"SF Mono",Menlo,monospace}
+kbd{padding:1px 6px; border:1px solid var(--border); border-bottom-width:2px; border-radius:5px; background:var(--bg-soft)}
+.menu{font-weight:600}
+@media (min-width:600px){ .menu{white-space:nowrap} }
+
+header{border-bottom:1px solid var(--border)}
+.nav{display:flex; align-items:center; gap:12px; height:64px}
+.logo{display:flex; align-items:center; gap:11px; font-weight:750; letter-spacing:-.02em; text-decoration:none; color:var(--fg); font-size:17px}
+.mark{width:30px;height:30px;border-radius:9px;background:var(--brand);color:var(--brand-fg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex:none}
+.nav-links{margin-inline-start:auto; display:flex; gap:18px; font-size:14px}
+.nav-links a{color:var(--fg-muted); text-decoration:none}
+.nav-links a:hover{color:var(--fg)}
+
+.hero{padding:64px 0 36px; display:grid; gap:18px}
+.crumb{font-size:14px; color:var(--fg-muted); margin:0}
+.crumb a{color:inherit}
+h1{font-size:clamp(2.2rem,6vw,3.4rem); line-height:1.05; letter-spacing:-.035em; margin:0; font-weight:800}
+.tagline{font-size:clamp(1.15rem,2.6vw,1.45rem); letter-spacing:-.015em; margin:0; font-weight:650}
+.lede{font-size:clamp(1rem,2vw,1.1rem); color:var(--fg-muted); max-width:62ch; margin:0}
+.actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:8px}
+.btn{
+  display:inline-flex; align-items:center; gap:8px; padding:11px 18px; border-radius:10px;
+  border:1px solid var(--border); background:var(--bg-card); color:var(--fg);
+  font-weight:650; font-size:15px; text-decoration:none; transition:border-color .14s ease, transform .14s ease;
+}
+.btn:hover{border-color:var(--brand); transform:translateY(-1px)}
+.btn.primary{background:var(--brand); border-color:var(--brand); color:var(--brand-fg)}
+.btn.primary:hover{filter:brightness(1.08)}
+.facts{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:14px; color:var(--fg-muted); margin:4px 0 0; padding:0; list-style:none}
+.facts li::before{content:"·"; margin-inline-end:16px; color:var(--border)}
+/* niente separatore davanti al primo elemento visibile (la versione e' nascosta finche' non arriva) */
+.facts li:first-child::before, .facts li[hidden] + li::before{content:none}
+.version{color:var(--good); font-weight:600}
+
+.shot{margin:18px 0 0}
+.shot img{display:block; width:100%; height:auto; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shot-shadow)}
+.shot figcaption{font-size:14px; color:var(--fg-muted); margin-top:12px; max-width:70ch}
+
+section{padding:64px 0; border-top:1px solid var(--border)}
+section.first{border-top:0; padding-top:40px}
+h2{font-size:clamp(1.4rem,3vw,1.85rem); letter-spacing:-.022em; margin:0 0 8px; font-weight:750}
+.section-lede{color:var(--fg-muted); margin:0 0 32px; max-width:62ch}
+
+.features{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.feature{background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px; box-shadow:var(--shadow)}
+.feature h3{margin:0 0 6px; font-size:1.03rem; letter-spacing:-.01em}
+.feature p{margin:0; color:var(--fg-muted); font-size:14.6px}
+
+.pair{display:grid; gap:24px; grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.pair .shot{margin:0}
+
+.ai{display:grid; gap:28px; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); align-items:start}
+@media (max-width:820px){ .ai{grid-template-columns:1fr} .pair{grid-template-columns:1fr} }
+.ai p{margin:0 0 14px}
+.sent{background:var(--bg-soft); border-radius:12px; padding:18px 20px; font-size:14.5px}
+.sent h3{margin:0 0 8px; font-size:.98rem}
+.sent ul{margin:0; padding-inline-start:18px; color:var(--fg-muted)}
+.sent li{margin:4px 0}
+
+.steps{counter-reset:s; list-style:none; margin:0; padding:0; display:grid; gap:14px}
+.steps li{counter-increment:s; position:relative; padding:4px 0 4px 48px; min-height:36px}
+.steps li::before{
+  content:counter(s); position:absolute; left:0; top:0; width:34px; height:34px; border-radius:50%;
+  background:color-mix(in srgb,var(--brand) 14%,transparent); color:var(--brand);
+  font-weight:750; display:flex; align-items:center; justify-content:center;
+}
+.note{margin-top:26px; padding:16px 18px; border-radius:12px; border:1px solid color-mix(in srgb,var(--warn) 40%,var(--border)); background:color-mix(in srgb,var(--warn) 7%,transparent); font-size:14.5px}
+.note strong{color:var(--warn)}
+.cols{display:grid; gap:28px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); margin-top:32px}
+.cols h3{margin:0 0 6px; font-size:1.03rem}
+.cols p{margin:0; color:var(--fg-muted); font-size:14.8px}
+
+.fixes{margin:0; padding:0; list-style:none; display:grid; gap:10px}
+.fixes li{padding:12px 16px 12px 44px; border-radius:10px; background:var(--bg-soft); position:relative; font-size:15px}
+.fixes li::before{content:"✓"; position:absolute; left:16px; top:11px; color:var(--good); font-weight:800}
+.metric{font-variant-numeric:tabular-nums; font-weight:700}
+.more{margin-top:22px; display:flex; flex-wrap:wrap; gap:10px 22px; font-size:15px}
+
+.support{background:var(--bg-soft); border-top:0}
+.support .wrap{display:grid; gap:14px; justify-items:start}
+.support p{margin:0; max-width:60ch; color:var(--fg-muted)}
+.btn.coffee{background:#ffc439; border-color:#ffc439; color:#111}
+
+footer{border-top:1px solid var(--border); padding:30px 0 44px; color:var(--fg-muted); font-size:14px}
+footer .wrap{display:grid; gap:10px}
+footer nav{display:flex; flex-wrap:wrap; gap:8px 20px}
+footer a{color:inherit}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="https://bais.info/"><span class="mark">B</span>bais.info</a>
+    <nav class="nav-links" aria-label="Collegamenti">
+      <a href="https://github.com/bdbais/saxon-runner/blob/main/docs/MANUALE.md">Manuale</a>
+      <a href="https://github.com/bdbais/saxon-runner">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="wrap hero">
+  <p class="crumb"><a href="https://bais.info/#progetti">Progetti</a> / Saxon Runner</p>
+  <h1>Saxon Runner</h1>
+  <p class="tagline">XSLT e Saxon su Windows, senza riga di comando.</p>
+  <p class="lede">Scegli lo stylesheet e l'XML, premi Esegui. Il risultato e gli errori di Saxon arrivano in due schede separate, e un clic sull'errore ti porta alla riga giusta nell'editor. Nato per chi scrive mapping XSLT tutti i giorni e non vuole più incollare percorsi in un prompt dei comandi.</p>
+  <div class="actions">
+    <a class="btn primary" href="https://github.com/bdbais/saxon-runner/releases/latest/download/SaxonRunner-Setup.exe">⬇&nbsp; Scarica per Windows</a>
+    <a class="btn" href="https://github.com/bdbais/saxon-runner/releases/latest/download/SaxonRunner-portable.exe">Versione portatile</a>
+    <a class="btn" href="https://github.com/bdbais/saxon-runner/blob/main/docs/MANUALE.md">Manuale utente</a>
+  </div>
+  <ul class="facts">
+    <li id="version" class="version" hidden></li>
+    <li>Windows 10 e 11</li>
+    <li>Gratuito e open source</li>
+    <li>Serve Java e un JAR di Saxon (HE è gratuito)</li>
+  </ul>
+  <figure class="shot">
+    <img src="img/console.png" width="1600" height="960" alt="Saxon Runner con un errore XPath: la console mostra il codice XPST0003 spiegato in italiano e la posizione cliccabile nel file">
+    <figcaption>Un errore di sintassi XPath: il codice <code>XPST0003</code> spiegato in italiano, la posizione nel file cliccabile, la riga di comando esatta in cima.</figcaption>
+  </figure>
+</div>
+
+<section class="first" id="funzioni">
+  <div class="wrap">
+    <h2>Cosa fa</h2>
+    <p class="section-lede">Quello che serve per scrivere e provare una trasformazione, senza aprire altro.</p>
+    <div class="features">
+      <div class="feature">
+        <h3>Esegue Saxon senza ricordare la sintassi</h3>
+        <p>HE, PE o EE, anche più versioni configurate. Parametri, output e log su file, e la riga di comando esatta sempre visibile.</p>
+      </div>
+      <div class="feature">
+        <h3>Errori che portano alla riga giusta</h3>
+        <p>Console colorata, codici d'errore spiegati, posizioni cliccabili anche nei moduli inclusi e nelle cartelle con spazi.</p>
+      </div>
+      <div class="feature">
+        <h3>Riparte quando salvi</h3>
+        <p>Con Watch attivo, salvi lo stylesheet o l'XML e la trasformazione riparte da sola. Una alla volta, anche se salvi di continuo.</p>
+      </div>
+      <div class="feature">
+        <h3>Un editor che rispetta i file</h3>
+        <p>Evidenziazione della sintassi, trova e sostituisci, righe d'errore segnate. Uno stylesheet in ISO-8859-1 resta ISO-8859-1.</p>
+      </div>
+      <div class="feature">
+        <h3>Le ultime esecuzioni a portata di mano</h3>
+        <p>Cento combinazioni di stylesheet e XML a un doppio clic, e configurazioni da salvare o passare a un collega.</p>
+      </div>
+      <div class="feature">
+        <h3>Si aggiorna da solo</h3>
+        <p>All'avvio controlla se c'è una versione nuova, verifica il checksum dell'installer e si riapre aggiornato.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="editor">
+  <div class="wrap">
+    <h2>Dall'errore alla correzione</h2>
+    <p class="section-lede">Il clic sulla posizione apre lo stylesheet con la riga segnata. Corretta e salvata, la trasformazione riparte.</p>
+    <div class="pair">
+      <figure class="shot">
+        <img src="img/editor.png" width="1600" height="960" loading="lazy" alt="Editor XSLT di Saxon Runner con la riga dell'errore evidenziata in rosso">
+        <figcaption>La riga dell'errore segnata nell'editor.</figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="img/risultato.png" width="1600" height="960" loading="lazy" alt="Scheda Risultato di Saxon Runner con l'XML prodotto dalla trasformazione">
+        <figcaption>Corretto e salvato: il risultato della trasformazione.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="ai">
+  <div class="wrap ai">
+    <div>
+      <h2>Un assistente AI che resta sul tuo computer</h2>
+      <p>Se usi <a href="https://ollama.com">Ollama</a> o LM Studio, Saxon Runner può proporre completamenti mentre scrivi, controllare lo stylesheet segnando le righe sospette e rispondere a domande su quello che hai aperto.</p>
+      <p>Il modello gira sul tuo PC: con l'endpoint su <code>localhost</code> il codice non va da nessuna parte. È facoltativo, e da spento non apre nessuna connessione.</p>
+    </div>
+    <div class="sent">
+      <h3>Cosa riceve il modello</h3>
+      <ul>
+        <li>Autocompletamento: le ultime 40 righe prima del cursore</li>
+        <li>Controllo: i primi 3000 caratteri dello stylesheet</li>
+        <li>Chat: i tuoi messaggi e lo stylesheet come contesto</li>
+        <li>Solo all'indirizzo che scegli tu nelle impostazioni</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="installazione">
+  <div class="wrap">
+    <h2>Installazione</h2>
+    <p class="section-lede">Due minuti, senza password di amministratore.</p>
+    <ol class="steps">
+      <li>Scarica <a href="https://github.com/bdbais/saxon-runner/releases/latest/download/SaxonRunner-Setup.exe">SaxonRunner-Setup.exe</a> e avvialo: si installa per il tuo utente.</li>
+      <li>Al primo avvio: <span class="menu">Strumenti ▸ Impostazioni ▸ Aggiungi JAR…</span> e scegli il JAR di Saxon.</li>
+      <li>Scegli stylesheet e XML e premi <strong>Esegui</strong>.</li>
+    </ol>
+    <div class="note"><strong>Windows SmartScreen.</strong> L'eseguibile non è firmato con un certificato commerciale, quindi la prima volta Windows chiede conferma: <span class="menu">Ulteriori informazioni ▸ Esegui comunque</span>. Gli SHA-256 di ogni file sono pubblicati nella release, in <code>SHA256SUMS.txt</code>.</div>
+    <div class="cols">
+      <div>
+        <h3>Aggiornamenti</h3>
+        <p>La versione installata propone gli aggiornamenti da sola e si riapre aggiornata; impostazioni e cronologia restano. La versione portatile avvisa e porta alla pagina di download.</p>
+      </div>
+      <div>
+        <h3>Disinstallazione</h3>
+        <p>Da <span class="menu">Impostazioni ▸ App ▸ App installate</span>. Alla fine chiede se eliminare anche impostazioni e cronologia; i tuoi file non vengono mai toccati.</p>
+      </div>
+      <div>
+        <h3>Requisiti</h3>
+        <p>Windows 10 o 11 a 64 bit, Java e un JAR di Saxon. Saxon non è incluso: usi la versione e la licenza che ti servono.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="novita">
+  <div class="wrap">
+    <h2>Novità della 3.1</h2>
+    <p class="section-lede">La prima versione pubblica nasce da una code review completa della 3.0. Fra le correzioni:</p>
+    <ul class="fixes">
+      <li>Niente più finestra nera di Java a ogni esecuzione.</li>
+      <li>Il clic sull'errore funziona con i percorsi <code>file:/C:/…</code> e con le cartelle che contengono spazi.</li>
+      <li>I file non UTF-8 non vengono più alterati al salvataggio.</li>
+      <li>Un salvataggio fallito alla chiusura non fa più perdere le modifiche.</li>
+      <li>Evidenziazione della sintassi su 3000 righe: da <span class="metric">9 s</span> a <span class="metric">55 ms</span>.</li>
+    </ul>
+    <div class="more">
+      <a href="https://github.com/bdbais/saxon-runner/blob/main/docs/CODE_REVIEW.md">Leggi la code review</a>
+      <a href="https://github.com/bdbais/saxon-runner/blob/main/CHANGELOG.md">Tutte le modifiche</a>
+      <a href="https://github.com/bdbais/saxon-runner/issues">Segnala un problema</a>
+    </div>
+  </div>
+</section>
+
+<section class="support" id="sostieni">
+  <div class="wrap">
+    <h2>Sostieni il progetto</h2>
+    <p>Saxon Runner è gratuito e open source, e lo resterà. Se ti fa risparmiare tempo e ti va, puoi offrire un caffè a chi lo mantiene. Nessun obbligo: funziona identico in ogni caso.</p>
+    <a class="btn coffee" href="https://paypal.me/bellizia">☕&nbsp; Offri un caffè con PayPal</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Piè di pagina">
+      <a href="https://bais.info/">bais.info</a>
+      <a href="https://github.com/bdbais/saxon-runner">Codice su GitHub</a>
+      <a href="https://github.com/bdbais/saxon-runner/releases">Tutte le versioni</a>
+      <a href="https://github.com/bdbais/saxon-runner/issues">Segnala un problema</a>
+    </nav>
+    <span>Licenza Apache 2.0. Saxon è un prodotto di Saxonica Ltd; Saxon Runner non è affiliato con Saxonica.</span>
+  </div>
+</footer>
+
+<script src="version.js" defer></script>
+</body>
+</html>

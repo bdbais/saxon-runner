@@ -1,6 +1,6 @@
 # Saxon Runner — Manuale utente
 
-Versione 3.1 · [Scarica](https://github.com/bdbais/saxon-runner/releases/latest) · [Pagina del progetto](https://bais.info/saxon-runner/) · [Segnala un problema](https://github.com/bdbais/saxon-runner/issues)
+Versione 3.1 · [Scarica](https://github.com/bdbais/saxon-runner/releases/latest) · [Pagina del progetto](https://saxonrunner.bais.info/) · [Segnala un problema](https://github.com/bdbais/saxon-runner/issues)
 
 Saxon Runner è un'interfaccia grafica per [Saxon](https://www.saxonica.com/), il processore XSLT e XQuery, su Windows. Invece di scrivere a mano
 

@@ -42,6 +42,7 @@ python -m unittest discover -s tests -v
 | `SaxonRunner.pyw` | Avvio senza console e punto d'ingresso di PyInstaller |
 | `SaxonRunner.spec` | Build dell'exe |
 | `installer/SaxonRunner.iss` | Installer e disinstallazione (Inno Setup 6) |
+| `site/` | La pagina di [saxonrunner.bais.info](https://saxonrunner.bais.info/): Worker Cloudflare, si pubblica con `npx wrangler deploy` da quella cartella |
 | `.github/workflows/release.yml` | CI: test, exe, installer, prova di installazione, release |
 | `docs/MANUALE.md` | Manuale utente |
 | `docs/CODE_REVIEW.md` | Revisione della 3.0 e correzioni della 3.1 |

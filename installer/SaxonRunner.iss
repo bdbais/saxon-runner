@@ -12,7 +12,7 @@
 #endif
 #define AppName "Saxon Runner"
 #define AppExe "SaxonRunner.exe"
-#define AppUrl "https://bais.info/saxon-runner/"
+#define AppUrl "https://saxonrunner.bais.info/"
 #define ManualUrl "https://github.com/bdbais/saxon-runner/blob/main/docs/MANUALE.md"
 
 [Setup]

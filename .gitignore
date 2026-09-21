@@ -19,3 +19,6 @@ venv/
 
 # Log e file prodotti dalle esecuzioni
 *.log
+
+# Cache di wrangler (id account e altri dati locali)
+.wrangler/

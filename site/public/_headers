@@ -1,0 +1,8 @@
+# La pagina ha un solo script, esterno, che legge da api.github.com il
+# numero dell'ultima versione: la policy non concede altro.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src https://api.github.com; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'

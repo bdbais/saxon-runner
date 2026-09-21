@@ -1,0 +1,14 @@
+// Pagina di Saxon Runner su saxonrunner.bais.info, servita da Cloudflare
+// Workers come gli altri progetti di bais.info.
+// Deploy: npx wrangler deploy   (da questa cartella)
+{
+  "name": "saxonrunner-site",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+  "routes": [{ "pattern": "saxonrunner.bais.info", "custom_domain": true }]
+}

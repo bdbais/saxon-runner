@@ -59,7 +59,7 @@ FONT_SMALL  = ("Segoe UI",  8)
 CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".saxon_runner_config.json")
 LOG_FILE    = os.path.join(os.path.expanduser("~"), ".saxon_runner.log")
 
-PROJECT_URL = "https://bais.info/saxon-runner/"
+PROJECT_URL = "https://saxonrunner.bais.info/"
 MANUAL_URL  = "https://github.com/bdbais/saxon-runner/blob/main/docs/MANUALE.md"
 ISSUES_URL  = "https://github.com/bdbais/saxon-runner/issues"
 DONATE_URL  = "https://paypal.me/bellizia"
